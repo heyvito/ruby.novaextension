@@ -6,23 +6,9 @@ class RubyLanguageServer extends BaseLanguageServer {
 	constructor() {
 		super();
 
-		// Observe the configuration setting for the server's location, and
-		// restart the server on change.
-		const toObserve = [
-			"ruby.language-server-path",
-			"ruby.docker-compose-service",
-			"ruby.docker-compose-mount-path",
-			"ruby.docker-executable-path",
-		];
+		this.observeConfiguration("ruby.docker-compose-service");
 
 		this.languageClient = null;
-
-		this.configurationListeners = toObserve.map((configKey) =>
-			nova.config.onDidChange(configKey, (newValue) =>
-				this.onConfigChanged(configKey, newValue)
-			)
-		);
-
 		this.start()
 			.catch(ex => {
 				this.logError(ex, ex.stack);
@@ -30,7 +16,7 @@ class RubyLanguageServer extends BaseLanguageServer {
 	}
 
 	get preferredExecutionMethod() {
-		if (!!nova.config.get("ruby.docker-compose-service")) {
+		if (!!this.getConfig("ruby.docker-compose-service")) {
 			return "docker";
 		}
 
@@ -42,17 +28,10 @@ class RubyLanguageServer extends BaseLanguageServer {
 			.some(file => this.workspaceContainsFile(file));
 	}
 
-	deactivate() {
-		this.configurationListeners.forEach(listener => {
-			listener.dispose()
-		})
-		this.stop();
-	}
-
-	onConfigChanged(key, newValue) {
-		this.log("Configuration changed: ", key, newValue);
-		if (this.languageClient) {
-			this.languageClient.onConfigChanged(key, newValue);
+	async onConfigChanged(key, newValue) {
+		if (key === "ruby.docker-compose-service") {
+			this.stop();
+			this.start();
 		}
 	}
 
@@ -73,13 +52,13 @@ class RubyLanguageServer extends BaseLanguageServer {
 		}
 
 		this.log(`Starting language server ${this.languageClient.constructor.name}`);
-
+		await this.languageClient.prepare()
 		await this.languageClient.start()
 	}
 
-	async stop() {
+	stop() {
 		if (this.languageClient) {
-			await this.languageClient.stop();
+			this.languageClient.deactivate();
 			this.languageClient = null;
 		}
 	}

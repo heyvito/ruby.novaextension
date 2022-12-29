@@ -1,4 +1,48 @@
 class BaseLanguageServer {
+    constructor() {
+        this.__localSettingsCache = {};
+        this.observedConfigurationKeys = [];
+
+        // Observe the configuration setting for the server's location, and
+        // restart the server on change.
+        this.toObserve = {
+            "ruby.language-server-path": "global",
+
+            "ruby.docker-compose-service": "workspace",
+            "ruby.docker-compose-mount-path": "workspace",
+            "ruby.docker-executable-path": "workspace",
+            "ruby.docker-compose-shell": "workspace",
+            "ruby.docker-compose-try-bundle": "workspace",
+        };
+
+        this.configurationListeners = Object.keys(this.toObserve).map((configKey) => {
+            let config = this.toObserve[configKey] == "workspace" ? nova.workspace.config : nova.config;
+
+            return config.onDidChange(configKey, (newValue) => {
+                if (this.__localSettingsCache[configKey] == newValue) {
+                    return;
+                }
+                this.__localSettingsCache[configKey] = newValue;
+
+                if (this.observedConfigurationKeys.includes(configKey)) {
+                    this.onConfigChanged(configKey, newValue)
+                        .catch(ex => this.logError(ex, ex.stack));
+                }
+            })
+        });
+    }
+
+    async prepare() {}
+
+    getConfig(key) {
+        let config = this.toObserve[key] == "workspace" ? nova.workspace.config : nova.config;
+        return config.get(key);
+    }
+
+    observeConfiguration(...name) {
+        this.observedConfigurationKeys.push(...name);
+    }
+
     workspaceContainsFile(named) {
         return nova.workspace.contains(this.workspaceFilePath(named));
     }
@@ -8,6 +52,7 @@ class BaseLanguageServer {
     }
 
     runProcess(command, ...args) {
+        this.log("runProcess is invoking ", [command, ...args].map(i => `"${i}"`).join(" "))
         return new Promise(resolve => {
             let result = {
                 command: command,
@@ -46,7 +91,7 @@ class BaseLanguageServer {
         console.log(...args);
     }
 
-    onConfigChanged(key, newValue) {}
+    async onConfigChanged(key, newValue) {}
 
     notifyUser(kind, title, body, helpAction) {
         const request = new NotificationRequest("kind");
@@ -68,6 +113,21 @@ class BaseLanguageServer {
                 return true;
             })
             .catch((error) => this.logError(error, error.stack))
+    }
+
+    openWorkspaceConfig() {
+        nova.workspace.openConfig('tdegrunt.Ruby');
+    }
+
+    deactivate() {
+        this.log(`${this.constructor.name}: Deactivate called.`)
+        this.log(`${this.constructor.name}: Calling stop.`)
+        this.stop();
+
+        this.configurationListeners.forEach(listener => {
+            listener.dispose()
+        });
+        this.configurationListeners = [];
     }
 }
 

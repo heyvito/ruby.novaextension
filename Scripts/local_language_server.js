@@ -6,12 +6,10 @@ class LocalLanguageServer extends BaseLanguageServer {
         super();
         this.languageClient = null;
         this.langServerPath = null;
-        this.observedConfigurationKeys = [
-            "ruby.language-server-path"
-        ];
+        this.observeConfiguration("ruby.language-server-path");
     }
 
-    onConfigChanged(key, newValue) {
+    async onConfigChanged(key, newValue) {
         this.log("Received onConfigChanged");
         if (this.observedConfigurationKeys.includes(key)) {
             if (this.langServerPath == newValue) { return; }
@@ -48,7 +46,7 @@ class LocalLanguageServer extends BaseLanguageServer {
 
     async commandArgs(commandArguments) {
         let args = [];
-        let pathFromConfig = nova.config.get('ruby.language-server-path');
+        let pathFromConfig = this.getConfig('ruby.language-server-path');
         if (!this.langServerPath) {
             this.langServerPath = pathFromConfig;
         }
@@ -100,7 +98,7 @@ class LocalLanguageServer extends BaseLanguageServer {
         .finally(() => { this.notified = true });
     }
 
-    async stop() {
+    stop() {
         this.log(`${this.constructor.name} is stopping...`);
         if (this.languageClient) {
             this.languageClient.stop();

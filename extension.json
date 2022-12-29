@@ -30,7 +30,7 @@
             "placeholder": "/usr/local/bin/docker"
         }
     ],
-    "workspaceConfig": [
+    "configWorkspace": [
         {
             "type": "section",
             "title": "Docker Compose Integration",
@@ -46,8 +46,24 @@
                     "key": "ruby.docker-compose-mount-path",
                     "type": "string",
                     "title": "Mount Path",
-                    "description": "The path in the container where this project's root is mounted at",
+                    "description": "The path in the container where this project's root is mounted at. If unset, this will use the default working directory of your container.",
                     "placeholder": "/app",
+                    "link": "https://github.com/tdegrunt/ruby.novaextension/"
+                },
+                {
+                    "key": "ruby.docker-compose-shell",
+                    "type": "string",
+                    "title": "Container Shell",
+                    "description": "The shell to use in the service container",
+                    "default": "sh",
+                    "link": "https://github.com/tdegrunt/ruby.novaextension/"
+                },
+                {
+                    "key": "ruby.docker-compose-try-bundle",
+                    "type": "bool",
+                    "title": "Try to Bundle on Startup",
+                    "description": "Indicates whether bundle check followed by bundle install (if required) should be executed before trying to run Solargraph",
+                    "default": true,
                     "link": "https://github.com/tdegrunt/ruby.novaextension/"
                 }
             ]
