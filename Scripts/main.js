@@ -15,6 +15,3 @@ exports.deactivate = function() {
         langserver = null;
     }
 }
-
-
-

@@ -22,6 +22,35 @@
             "title": "Language Server Path",
             "type": "path",
             "placeholder": "/Users/me/.rbenv/shims/solargraph"
+        },
+        {
+            "key": "ruby.docker-executable-path",
+            "title": "Docker Executable Path",
+            "type": "path",
+            "placeholder": "/usr/local/bin/docker"
+        }
+    ],
+    "workspaceConfig": [
+        {
+            "type": "section",
+            "title": "Docker Compose Integration",
+            "children": [
+                {
+                    "key": "ruby.docker-compose-service",
+                    "type": "string",
+                    "title": "Service Name",
+                    "description": "The name of the service bundling Solargraph and with a volume bind for this project",
+                    "link": "https://github.com/tdegrunt/ruby.novaextension/"
+                },
+                {
+                    "key": "ruby.docker-compose-mount-path",
+                    "type": "string",
+                    "title": "Mount Path",
+                    "description": "The path in the container where this project's root is mounted at",
+                    "placeholder": "/app",
+                    "link": "https://github.com/tdegrunt/ruby.novaextension/"
+                }
+            ]
         }
     ]
 }
